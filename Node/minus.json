@@ -1,0 +1,16 @@
+{
+  "label": "minus",
+  "InputOn": true,
+  "OutputOn": true,
+  "arg": [
+    "Input"
+  ],
+  "category": "Math",
+  "output_type": null,
+  "input_type": "Any",
+  "color": [
+    100,
+    100,
+    255
+  ]
+}

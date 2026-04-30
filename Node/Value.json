@@ -1,0 +1,17 @@
+{
+  "label": "Value",
+  "InputOn": true,
+  "OutputOn": true,
+  "arg": [
+    "StringInput",
+    "ValueName"
+  ],
+  "category": "Value",
+  "output_type": "Any",
+  "input_type": "Any",
+  "color": [
+    255,
+    140,
+    0
+  ]
+}

@@ -1,0 +1,16 @@
+{
+  "label": "Exit",
+  "InputOn": true,
+  "OutputOn": false,
+  "arg": [
+    0
+  ],
+  "category": "Out",
+  "output_type": null,
+  "input_type": "any",
+  "color": [
+    0,
+    180,
+    100
+  ]
+}

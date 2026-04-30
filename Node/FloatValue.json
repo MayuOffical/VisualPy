@@ -1,0 +1,19 @@
+{
+  "label": "FloatValue",
+  "InputOn": true,
+  "OutputOn": true,
+  "arg": [
+    "StringInput",
+    "ValueName",
+    "FloatInput",
+    "FloatValue"
+  ],
+  "category": "Value",
+  "output_type": "float",
+  "input_type": "Any",
+  "color": [
+    255,
+    140,
+    0
+  ]
+}

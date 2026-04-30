@@ -1,0 +1,19 @@
+{
+  "label": "IntValue",
+  "InputOn": true,
+  "OutputOn": true,
+  "arg": [
+    "StringInput",
+    "ValueName",
+    "IntInput",
+    "IntValue"
+  ],
+  "category": "Value",
+  "output_type": "int",
+  "input_type": "Any",
+  "color": [
+    255,
+    140,
+    0
+  ]
+}

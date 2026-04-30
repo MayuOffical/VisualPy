@@ -1,0 +1,18 @@
+{
+  "label": "If",
+  "InputOn": true,
+  "OutputOn": true,
+  "arg": [
+    "Input",
+    "StringInput",
+    "Operand"
+  ],
+  "category": "Logic",
+  "output_type": "Any",
+  "input_type": null,
+  "color": [
+    80,
+    80,
+    190
+  ]
+}

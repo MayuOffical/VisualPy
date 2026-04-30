@@ -1,0 +1,16 @@
+{
+  "label": "StartPoint",
+  "InputOn": false,
+  "OutputOn": true,
+  "arg": [
+    0
+  ],
+  "category": "In",
+  "output_type": "bool",
+  "input_type": null,
+  "color": [
+    80,
+    255,
+    80
+  ]
+}
