@@ -1,0 +1,19 @@
+{
+  "label": "BoolValue",
+  "InputOn": true,
+  "OutputOn": true,
+  "arg": [
+    "StringInput",
+    "ValueName",
+    "StringInput",
+    "BoolValue(0 or 1)"
+  ],
+  "category": "Value",
+  "output_type": "float",
+  "input_type": "Any",
+  "color": [
+    255,
+    140,
+    0
+  ]
+}
