@@ -1,8 +1,6 @@
-import io
 import json
 import os
 import subprocess
-import sys
 import threading
 
 import dearpygui.dearpygui as dpg
@@ -24,7 +22,6 @@ pin_values = {}
 variables = {}
 all_pins = []
 clipboard_nodes = []
-console_globals = {"__builtins__": __builtins__}
 
 TYPE_COLORS = {
     "float": [255, 165, 0, 255],
@@ -48,7 +45,6 @@ node_type_map = {}
 def load_node_definitions(directory="Node"):
     definitions = []
     if not os.path.exists(directory):
-        print(f"[警告] '{directory}' ディレクトリが見つかりません")
         return definitions
     for filename in sorted(os.listdir(directory)):
         if filename.endswith(".json"):
@@ -57,7 +53,7 @@ def load_node_definitions(directory="Node"):
                 with open(filepath, "r", encoding="utf-8") as f:
                     definitions.append(json.load(f))
             except Exception as e:
-                print(f"[エラー] {filename}: {e}")
+                append_console(f"[エラー] {filename}: {e}\n")
     return definitions
 
 
@@ -70,6 +66,7 @@ def add_node(label, InputOn, OutputOn, arg,
     node_color = color if color else [100, 100, 100]
     input_pins = []
     output_attr_id = None
+    is_magical = defn.get("magical", False) if defn else False
 
     if pos is None:
         pos = (425, 300)
@@ -87,6 +84,16 @@ def add_node(label, InputOn, OutputOn, arg,
                                     [min(c + 70, 255) for c in node_color] + [255],
                                     category=dpg.mvThemeCat_Nodes)
         dpg.bind_item_theme(node_tag, node_theme)
+
+        if is_magical:
+            with dpg.theme() as magic_theme:
+                with dpg.theme_component(dpg.mvNode):
+                    dpg.add_theme_color(dpg.mvNodeCol_TitleBar,        [120,   0, 200, 255], category=dpg.mvThemeCat_Nodes)
+                    dpg.add_theme_color(dpg.mvNodeCol_TitleBarHovered,  [160,  40, 240, 255], category=dpg.mvThemeCat_Nodes)
+                    dpg.add_theme_color(dpg.mvNodeCol_TitleBarSelected, [200,  80, 255, 255], category=dpg.mvThemeCat_Nodes)
+                    dpg.add_theme_color(dpg.mvNodeCol_NodeBackground,   [ 30,  10,  50, 230], category=dpg.mvThemeCat_Nodes)
+                    dpg.add_theme_color(dpg.mvNodeCol_NodeOutline,      [180,  80, 255, 255], category=dpg.mvThemeCat_Nodes)
+            dpg.bind_item_theme(node_tag, magic_theme)
 
         if InputOn:
             with dpg.node_attribute(attribute_type=dpg.mvNode_Attr_Input) as attr:
@@ -148,6 +155,7 @@ def add_node(label, InputOn, OutputOn, arg,
         "links_in": [],
         "links_out": [],
         "defn": defn,
+        "magical": is_magical,
     }
 
 
@@ -210,14 +218,13 @@ def delete_selected():
         if node_tag in node_registry:
             info = node_registry[node_tag]
             related_links = (
-                    [l["link_id"] for l in info["links_in"]] +
-                    [l["link_id"] for l in info["links_out"]]
+                [l["link_id"] for l in info["links_in"]] +
+                [l["link_id"] for l in info["links_out"]]
             )
             for lid in related_links:
                 if dpg.does_item_exist(lid):
                     dpg.delete_item(lid)
                 _remove_link_from_registry(lid)
-
             del node_registry[node_tag]
             node_type_map.pop(node_tag, None)
 
@@ -309,7 +316,7 @@ def get_execution_order():
         reachable.add(tag)
         for link in node_registry[tag]["links_out"]:
             nxt = link["to_node"]
-            if nxt and nxt in node_registry:
+            if nxt and nxt in node_registry and not node_registry[nxt].get("magical", False):
                 stack.append(nxt)
 
     in_degree = {tag: 0 for tag in reachable}
@@ -377,6 +384,23 @@ def run_callback():
                 input_values.append(None)
 
         for link in info["links_in"]:
+            from_tag = link["from_node"]
+            if from_tag and from_tag in node_registry:
+                from_info = node_registry[from_tag]
+                if from_info.get("magical", False) and from_info["output_attr"] not in pin_values:
+                    m_values = []
+                    for pin in from_info["all_pins"]:
+                        if pin["type"] == "static":
+                            m_values.append(dpg.get_value(pin["widget"]))
+                        else:
+                            m_values.append(None)
+                    m_result, IndentCounter = Compiler.Add_Code(
+                        from_info["label"], from_info["all_pins"], m_values, IndentCounter
+                    )
+                    if m_result is not None and from_info["output_attr"] is not None:
+                        pin_values[from_info["output_attr"]] = m_result
+
+        for link in info["links_in"]:
             idx = link["to_pin_index"]
             input_values[idx] = pin_values.get(link["from_attr"])
 
@@ -397,29 +421,20 @@ def execute_console_command(sender=None, app_data=None):
     dpg.focus_item("console_input")
     append_console(f"> {command}\n")
 
-    old_stdout = sys.stdout
-    old_stderr = sys.stderr
-    sys.stdout = io.StringIO()
-    sys.stderr = io.StringIO()
     try:
-        try:
-            result = eval(compile(command, "<input>", "eval"), console_globals)
-            if result is not None:
-                sys.stdout.write(repr(result) + "\n")
-        except SyntaxError:
-            exec(compile(command, "<input>", "exec"), console_globals)
+        proc = subprocess.Popen(
+            command,
+            shell=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            text=True,
+            encoding="utf-8",
+        )
+        for line in proc.stdout:
+            append_console(line)
+        proc.wait()
     except Exception as e:
-        sys.stderr.write(f"{type(e).__name__}: {e}\n")
-    finally:
-        out = sys.stdout.getvalue()
-        err = sys.stderr.getvalue()
-        sys.stdout = old_stdout
-        sys.stderr = old_stderr
-
-    if out:
-        append_console(out)
-    if err:
-        append_console(err)
+        append_console(f"Error: {e}\n")
 
 
 def new_vsp():
@@ -608,8 +623,7 @@ with dpg.window(label="Node Editor", pos=(150, 0), width=850, height=700, menuba
                                                                   default_path="saves", show=True))
             dpg.add_menu_item(label="Save",
                               callback=lambda: save_vsp(current_file) if current_file
-                              else dpg.configure_item("dlg_saveas",
-                                                      default_path="saves", show=True))
+                              else dpg.configure_item("dlg_saveas", default_path="saves", show=True))
             dpg.add_menu_item(label="Save as",
                               callback=lambda: dpg.configure_item("dlg_saveas",
                                                                   default_path="saves", show=True))

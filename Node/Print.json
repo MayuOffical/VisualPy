@@ -3,7 +3,7 @@
   "InputOn": true,
   "OutputOn": false,
   "arg": [
-    0
+    "InputText"
   ],
   "category": "Out",
   "output_type": null,
