@@ -1,0 +1,10 @@
+{
+  "label": "MagicString",
+  "InputOn": false,
+  "OutputOn": true,
+  "magical": true,
+  "arg": ["StringInput", "Value", 0],
+  "category": "Magic",
+  "output_type": "Any",
+  "color": [120, 0, 200]
+}

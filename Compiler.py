@@ -26,15 +26,15 @@ def Add_Code(label_name, pin, value, IndentCounter):
             f.write(f"{indent}{value[1]} = {repr(value[2])}\n")
             return value[1], IndentCounter
 
+        elif label_name == "MagicString":
+            return f'"{value[0]}"', IndentCounter
+
         elif label_name == "BoolValue":
             if value[2] == 0:
-                f.write(f"{indent}{value[2]} = False\n")
+                f.write(f"{indent}{value[1]} = False\n")
                 return value[1], IndentCounter
             elif value[2] == 1:
-                f.write(f"{indent}{value[2]} = True\n")
-                return value[1], IndentCounter
-            else:
-                f.write(f"print(BoolValue-{value[1]}/{value[2]}\n")
+                f.write(f"{indent}{value[1]} = True\n")
                 return value[1], IndentCounter
 
 
@@ -79,7 +79,7 @@ def Add_Code(label_name, pin, value, IndentCounter):
             return None, IndentCounter + 1
 
         elif label_name == "Print":
-            f.write(f"{indent}print({value[0]})\n")
+            f.write(f"{indent}print({value[1]})\n")
             return None, IndentCounter
 
     return None, IndentCounter
